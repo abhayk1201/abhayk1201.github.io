@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="shortcut icon" href="assets/favicon.png" type="image/x-icon">
+	<link rel="stylesheet" type="text/css" href="assets/patron.css" media="screen" />
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+      <script src="assets/patron1.js"></script>
+<![endif]-->
+	<title>Access Library Resource - UW Libraries</title>
+	<script>
+ (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ ga('create', 'UA-43550612-9', 'patron.library.wisc.edu');
+ ga('send', 'pageview');
+	</script>
+</head>
+<body>
+<div class="navbar navbar-default navbar-static-top navbar-inverse hide-in-primo" role="navigation">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse"> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button> <a href="https://www.library.wisc.edu/" class="navbar-brand"><img id="crest2" height="53" width="35" alt="[logo] Crest of the University of Wisconsin-Madison" src="assets/crest.png" /> <span class="hidden-xs hidden-sm visible-md visible-lg">UNIVERSITY OF WISCONSIN-MADISON LIBRARIES</span> <span class="hidden-xs visible-sm hidden-md hidden-lg">&nbsp;&nbsp;&nbsp;UW-MADISON LIBRARIES</span><span class="visible-xs hidden-sm hidden-md hidden-lg">Access Library Resource</span></a> 
+		</div>
+		<div class="navbar-collapse collapse">
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="http://www.wisc.edu/">UW Home</a></li>
+				<li><a href="https://www.library.wisc.edu/libraries/">Campus Libraries</a></li>
+				<li class="dropdown"> <a href="#" class="dropdown-toggle" data-toggle="dropdown"><img src="assets/ask.png" alt="[logo] Ask a Librarian" id="ask" /> a Librarian <b class="caret"></b></a> 
+				<ul class="dropdown-menu">
+					<li><a href="https://www.library.wisc.edu/help/ask/" id="ask-chat-link">chat</a></li>
+					<li><a href="https://www.library.wisc.edu/help/ask/email/">email</a></li>
+					<li><a href="https://www.library.wisc.edu/libraries/hours/">desk</a></li>
+				</ul>
+				</li>
+				<li class="dropdown"> <a href="#" class="dropdown-toggle" data-toggle="dropdown">My Accounts <b class="caret"></b></a> 
+				<ul class="dropdown-menu">
+					<li class="dropdown-header">Library</li>
+					<li><a href="https://account.library.wisc.edu/" title="Library Catalog Account">Library Catalog</a></li>
+					<li><a href="http://digital.library.wisc.edu/1711.web/ill" title="Article and Book Delivery">Interlibrary Loan</a></li>
+					<li><a href="http://digital.library.wisc.edu/1711.web/endnoteweb" title="Citation Manager">EndNote Basic</a></li>
+					<li class="dropdown-header">Campus</li>
+					<li><a href="https://my.wisc.edu/" title="My UW-Madison Portal">My UW</a></li>
+					<li><a href="https://wiscmail.wisc.edu/" title="University of Wisconsin web mail">WiscMail</a></li>
+					<li><a href="https://learnuw.wisc.edu/" title="'Learn at UW' online course tools">Learn@UW</a></li>
+					<li><a href="https://uwmadison.box.com/" title="UW Madison Box">UW Madison Box</a></li>
+				</ul>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+<div class="container" id="content">
+	<div class="page-header hidden-xs">
+		<h1>
+			Access Library Resource 
+		</h1>
+	</div>
+	<div class="row">
+		<div class="col-xs-12 col-sm-8 col-md-8 col-lg-8" id="login">
+		
+			<h3>
+				<a href="https://patron.library.wisc.edu/authn/login?url=https://ieeexplore.ieee.org/ielx7/8967512/8986968/08987153.pdf?tp=&arnumber=8987153&isnumber=8986968&ref=aHR0cHM6Ly9pZWVleHBsb3JlLmllZWUub3JnL2RvY3VtZW50Lzg5ODcxNTM=">Login With Your NetID</a>
+			</h3>
+			<p>
+				Logging in will give you access to library resources that are restricted (due to software licenses, copyright restrictions and other contractual agreements) to UW-Madison students, faculty, and staff.
+			</p>
+			<p>
+				<a href="https://www.library.wisc.edu/help/off-campus-access/">More Information</a>
+			</p>
+			<br>
+		
+		</div>
+		<div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3 class="panel-title">
+						NetID Information
+					</h3>
+				</div>
+				<ul class="list-group">
+					<li class="list-group-item"> If you need assistance with your NetID and password, please <a href="https://kb.wisc.edu/helpdesk/">contact the DoIT Helpdesk</a>. <strong>For security reasons, the Help Desk will only handle NetID and password issues over the phone.</strong></li>
+					<li class="list-group-item"><a href="http://helpdesk.doit.wisc.edu/page.php?id=2843">NetID Account Utilities</a> - Information on resetting passwords, activating accounts, and modifying accounts.</li>
+					<li class="list-group-item"><a href="http://helpdesk.wisc.edu/page.php?id=1538">NetID Eligibility</a> - Eligibility for a UW-Madison NetID and eligibility for remote access to library resources are <em>not</em> equivalent. <strong>Some NetID accounts may not allow access to library resources from off campus.</strong></li>
+			</div>
+		</div>
+	</div>
+	<br>
+	<footer class="footer">
+		<div class="pull-right">
+			<a href="https://www.library.wisc.edu/about/social-media/"><img src="assets/social-icon.png" alt="Twitter and Facebook icons" /></a> 
+		</div>
+		<div class="row">
+			<div class="col-sm-12 col-md-6 col-md-offset-3">
+				<p>
+				<a href="https://www.library.wisc.edu/help/accessibility/">Accessibility</a> * <a href="https://www.library.wisc.edu/about/code-of-conduct/">Code of Conduct</a> * <a href="https://www.library.wisc.edu/help/contact/">Contact Us</a> 
+				</p>
+				<address>728 State Street, Madison, Wisconsin 53706</address>
+				&copy; 2013 <a href="http://www.wisconsin.edu">Board of Regents of the University of Wisconsin System</a><br />
+			</div>
+		</div>
+	</footer>
+</div>
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="assets/patron2.js"></script>
+</body>
+</html>
