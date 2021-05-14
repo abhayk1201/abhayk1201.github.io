@@ -8,6 +8,7 @@ html, body, form, table, div, h1, h2, h3, h4, h5, h6, img, ol, ul, li, button {
 
 table {
     border-collapse: collapse;
+    background-color:#FFFFE0;
     border-width: 0px;
     empty-cells: show;
 }
@@ -16,6 +17,7 @@ body, td {
     font-size: 13px;
     font-family: Arial,sans-serif;
     line-height: 1.24;
+    color: blue;
 }
 
 .gsc_g_hist_wrp
@@ -43,6 +45,9 @@ body, td {
 
 		preg_match_all('/h-index<\/a><\/td><td class="gsc_rsb_std">(\d+)<\/td>/is',$contentText,$matches);
 		$hindex = isset($matches[1][0])?$matches[1][0]:'e3';
+		
+		preg_match_all('/i10-index<\/a><\/td><td class="gsc_rsb_std">(\d+)<\/td>/is',$contentText,$matches);
+		$i10index = isset($matches[1][0])?$matches[1][0]:'e5';
 
 		preg_match_all('/<style>(.+)/is',$contentText,$matches);
 		$contentText2 = isset($matches[1][0])?$matches[1][0]:'e4';
@@ -70,8 +75,7 @@ body, td {
 		}
 
 		$contentText2 = $dom->saveHTML();
-		$contentText2 = 'Citations according to <a href="'.$url.'">Google Scholar</a>: '
-                                .$citations.' (h-index: '.$hindex.')'.$contentText2;
+		$contentText2 = 'Citations according to <a target="_blank"  href="'.$url.'">Google Scholar</a>: '.' &nbsp;&nbsp;&nbsp; '.'<b>'.' (Citations: '.$citations.')'.'</b>'.' &nbsp;&nbsp;&nbsp; '.' (h-index: '.$hindex.')'.' &nbsp;&nbsp;&nbsp; '.' (i10-index: '.$i10index.')'.$contentText2;
 		
 		return $contentText2; 
 	}
@@ -82,7 +86,7 @@ body, td {
 
 		$id = htmlspecialchars($_GET['id'], ENT_QUOTES, 'UTF-8');
 		$lang = htmlspecialchars($_GET['lang'], ENT_QUOTES, 'UTF-8');
-		$url = "http://scholar.google.de/citations?user=".$id."&hl=".$lang;
+		$url = "http://scholar.google.co.in/citations?user=".$id."&hl=".$lang;
 
 		curl_setopt($curl, CURLOPT_URL, $url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
