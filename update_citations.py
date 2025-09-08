@@ -8,30 +8,63 @@ import re
 import urllib.request
 import urllib.error
 import ssl
-import shutil
+import time
+import random
+import gzip
+import io
 from datetime import datetime
 
 # Your Google Scholar user ID
 SCHOLAR_ID = 'hMTQZDQAAAAJ'
 
-def fetch_citation_data(user_id, lang='en'):
+def fetch_citation_data_from_url(user_id, lang='en', domain='scholar.google.com'):
     """Fetch citation data from Google Scholar profile"""
-    url = f'https://scholar.google.co.in/citations?user={user_id}&hl={lang}'
+    url = f'https://{domain}/citations?user={user_id}&hl={lang}'
     
-    # Create request with user agent to avoid blocking
+    # Create more realistic headers to avoid detection
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
+        'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"macOS"'
     }
     
     try:
-        # Create SSL context that doesn't verify certificates (for compatibility)
+        # Add random delay to appear more human-like (2-5 seconds)
+        delay = random.uniform(2.0, 5.0)
+        print(f"⏳ Waiting {delay:.1f}s to avoid rate limiting...")
+        time.sleep(delay)
+        
+        # Create SSL context that handles certificate issues
         ssl_context = ssl.create_default_context()
+        # For GitHub Actions and some environments, we need to handle cert issues
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
         
+        print(f"🌐 Requesting: {url}")
         request = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(request, timeout=30, context=ssl_context) as response:
-            content = response.read().decode('utf-8')
+            print(f"📡 Response status: {response.status}")
+            
+            # Handle gzip/compressed responses
+            raw_data = response.read()
+            
+            # Check if the response is gzip-compressed
+            if raw_data[:2] == b'\x1f\x8b':  # gzip magic number
+                content = gzip.decompress(raw_data).decode('utf-8')
+                print("📦 Decompressed gzip response")
+            else:
+                content = raw_data.decode('utf-8')
             
         # Extract metrics using regex
         citations_match = re.search(r'Citations</a></td><td class="gsc_rsb_std">(\d+)</td>', content, re.IGNORECASE)
@@ -74,6 +107,18 @@ def fetch_citation_data(user_id, lang='en'):
             'url': url
         }
         
+    except urllib.error.HTTPError as e:
+        if e.code == 403:
+            print(f"❌ Error fetching data: HTTP 403 Forbidden")
+            print("🚫 Google Scholar is blocking automated requests")
+            print("💡 Possible solutions:")
+            print("   • Try running the script manually instead of automated")
+            print("   • Wait 24-48 hours before trying again")
+            print("   • Consider using a VPN or different IP address")
+            print("   • The profile might be private or restricted")
+        else:
+            print(f"❌ HTTP Error {e.code}: {e.reason}")
+        return None
     except urllib.error.URLError as e:
         print(f"❌ Error fetching data: {e}")
         return None
@@ -86,15 +131,12 @@ def update_index_html(data):
     index_file = 'index.html'
     
     try:
-        # Read current content
+        # Read current content and store original length
         with open(index_file, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # Create backup
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-        backup_name = f'{index_file}.backup.{timestamp}'
-        shutil.copy2(index_file, backup_name)
-        print(f"📁 Backup created: {backup_name}")
+        original_length = len(content)
+        print(f"📏 Original file length: {original_length:,} characters")
         
         # Update citation summary text - flexible pattern that preserves publication count
         summary_pattern = r'\((\d+\+) publications, \d+\+ citations, h-index: \d+, i-10 index: \d+\)'
@@ -137,7 +179,22 @@ def update_index_html(data):
         else:
             print("⚠️  No chart data available to update")
         
-        # Write updated content
+        # Verify file length is reasonable before writing (safety check)
+        new_length = len(content)
+        length_diff = abs(new_length - original_length)
+        length_change_percent = (length_diff / original_length) * 100 if original_length > 0 else 0
+        
+        print(f"📏 Updated file length: {new_length:,} characters")
+        print(f"📐 Length change: {length_diff:,} characters ({length_change_percent:.1f}%)")
+        
+        # Safety check: Only update if change is less than 2%
+        if length_change_percent >= 2.0:
+            print(f"🚫 SAFETY CHECK FAILED: File size changed by {length_change_percent:.1f}% (≥2%)")
+            print("❌ Changes discarded to prevent potential corruption")
+            print("💡 This suggests the citation data extraction may have failed")
+            return False
+        
+        # Write updated content (only if change is <2%)
         with open(index_file, 'w', encoding='utf-8') as f:
             f.write(content)
         
@@ -155,6 +212,28 @@ def update_index_html(data):
         print(f"❌ Error updating {index_file}: {e}")
         return False
 
+def fetch_citation_data(user_id, lang='en'):
+    """Fetch citation data from Google Scholar profile with retry logic"""
+    domains_to_try = [
+        'scholar.google.com',
+        'scholar.google.co.in',
+        'scholar.google.co.uk'
+    ]
+    
+    for i, domain in enumerate(domains_to_try):
+        if i > 0:
+            print(f"🔄 Retrying with {domain}...")
+        
+        try:
+            data = fetch_citation_data_from_url(user_id, lang, domain)
+            if data:
+                return data
+        except Exception as e:
+            print(f"⚠️  Failed with {domain}: {str(e)[:50]}...")
+            continue
+    
+    return None
+
 def main():
     """Main execution function"""
     print("🔍 Fetching latest citation data from Google Scholar...")
@@ -169,12 +248,16 @@ def main():
             print("\n🎉 Citation data updated successfully!")
         else:
             print("\n❌ Failed to update index.html")
+            print("🔒 File was not modified to ensure data integrity")
     else:
-        print("❌ Failed to fetch citation data")
+        print("❌ Failed to fetch citation data from all domains")
         print("\n💡 Possible solutions:")
         print("   • Try again in a few minutes (Google Scholar may have rate limits)")
+        print("   • Wait 24-48 hours before trying automated requests again")
         print("   • Check your internet connection")
         print("   • Verify your Google Scholar profile is public")
+        print("   • Consider running the script manually instead of via GitHub Actions")
+        print("   • The automated workflow may be temporarily blocked by Google")
 
 if __name__ == '__main__':
     main()
