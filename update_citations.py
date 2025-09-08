@@ -44,11 +44,33 @@ def fetch_citation_data(user_id, lang='en'):
             content, re.DOTALL | re.IGNORECASE
         )
         
+        # Clean the chart data to maintain user preferences  
+        chart_data = ''
+        if chart_match:
+            raw_chart = chart_match.group(1)
+            
+            # Remove the detailed table completely
+            raw_chart = re.sub(r'<h3[^>]*>.*?</h3>', '', raw_chart, flags=re.DOTALL)
+            raw_chart = re.sub(r'<table[^>]*>.*?</table>', '', raw_chart, flags=re.DOTALL)
+            
+            # Remove the "A0" text from the chart (handle all formats)
+            raw_chart = re.sub(r'content:\s*"\s*A0\s*";?', 'content:"";', raw_chart)
+            raw_chart = re.sub(r'content:" A0";?', 'content:"";', raw_chart)  
+            raw_chart = re.sub(r'content:\s*" A0";?', 'content:"";', raw_chart)
+            raw_chart = re.sub(r'content:"A0";?', 'content:"";', raw_chart)
+            # Handle Unicode, null bytes, and special characters  
+            raw_chart = re.sub(r'content:\s*\"[^\x20-\x7E]*A0[^\x20-\x7E]*\";?', 'content:"";', raw_chart)
+            raw_chart = re.sub(r'content:\s*\"\x00A0\";?', 'content:"";', raw_chart)
+            # Handle literal \00A0 pattern
+            raw_chart = re.sub(r'\\00A0', '', raw_chart)
+            
+            chart_data = raw_chart
+        
         return {
             'citations': citations_match.group(1) if citations_match else '0',
             'hindex': hindex_match.group(1) if hindex_match else '0',
             'i10index': i10index_match.group(1) if i10index_match else '0',
-            'chart': chart_match.group(1) if chart_match else '',
+            'chart': chart_data,
             'url': url
         }
         
@@ -79,11 +101,38 @@ def update_index_html(data):
         new_summary = f"(12+ publications, {data['citations']}+ citations, h-index: {data['hindex']}, i-10 index: {data['i10index']})"
         content = re.sub(summary_pattern, new_summary, content)
         
-        # Update chart data if available
+        # Update chart data if available - use more robust pattern
         if data['chart']:
-            chart_pattern = r'(<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit"[^>]*>)(.*?)(</div>\s*</td>)'
-            replacement = f"\\g<1>{data['chart']}\\g<3>"
-            content = re.sub(chart_pattern, replacement, content, flags=re.DOTALL)
+            # Look for the complete citation div structure and replace safely
+            chart_start = '<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit"'
+            chart_end = '</div></div></div></div>'
+            
+            start_idx = content.find(chart_start)
+            if start_idx != -1:
+                # Find the end of the citation div (look for the 4-level closing divs)
+                temp_content = content[start_idx:]
+                div_count = 0
+                end_idx = -1
+                
+                for i, char in enumerate(temp_content):
+                    if temp_content[i:i+5] == '<div ':
+                        div_count += 1
+                    elif temp_content[i:i+6] == '</div>':
+                        div_count -= 1
+                        if div_count == 0:
+                            end_idx = start_idx + i + 6
+                            break
+                
+                if end_idx != -1:
+                    # Replace only the citation div content safely
+                    new_chart_div = f'<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit" role="region" aria-labelledby="gsc_prf_t-cit">{data["chart"]}'
+                    content = content[:start_idx] + new_chart_div + content[end_idx:]
+                else:
+                    print("⚠️  Could not find chart end, using fallback pattern")
+                    # Fallback to original pattern but safer
+                    chart_pattern = r'(<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit"[^>]*>)(.*?)(</div></div></div></div>)'
+                    replacement = f"\\g<1>{data['chart']}"
+                    content = re.sub(chart_pattern, replacement, content, flags=re.DOTALL)
         
         # Write updated content
         with open(index_file, 'w', encoding='utf-8') as f:
