@@ -96,43 +96,46 @@ def update_index_html(data):
         shutil.copy2(index_file, backup_name)
         print(f"📁 Backup created: {backup_name}")
         
-        # Update citation summary text
-        summary_pattern = r'\(12\+ publications, \d+\+ citations, h-index: \d+, i-10 index: \d+\)'
-        new_summary = f"(12+ publications, {data['citations']}+ citations, h-index: {data['hindex']}, i-10 index: {data['i10index']})"
-        content = re.sub(summary_pattern, new_summary, content)
+        # Update citation summary text - flexible pattern that preserves publication count
+        summary_pattern = r'\((\d+\+) publications, \d+\+ citations, h-index: \d+, i-10 index: \d+\)'
         
-        # Update chart data if available - use more robust pattern
+        def replace_summary(match):
+            publications_count = match.group(1)  # Preserve existing publication count
+            return f"({publications_count} publications, {data['citations']}+ citations, h-index: {data['hindex']}, i-10 index: {data['i10index']})"
+        
+        # Update ALL instances of citation summary (not just the first one)
+        content = re.sub(summary_pattern, replace_summary, content)
+        
+        # Count how many updates were made  
+        updated_pattern = r'\(\d+\+ publications, ' + str(data['citations']) + r'\+ citations'
+        updated_count = len(re.findall(updated_pattern, content))
+        if updated_count > 0:
+            print(f"📝 Found and updated {updated_count} citation reference(s)")
+        
+        # Update chart data if available - robust pattern matching
         if data['chart']:
-            # Look for the complete citation div structure and replace safely
-            chart_start = '<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit"'
-            chart_end = '</div></div></div></div>'
+            print("🔄 Updating citation chart with fresh data from Google Scholar...")
             
-            start_idx = content.find(chart_start)
-            if start_idx != -1:
-                # Find the end of the citation div (look for the 4-level closing divs)
-                temp_content = content[start_idx:]
-                div_count = 0
-                end_idx = -1
-                
-                for i, char in enumerate(temp_content):
-                    if temp_content[i:i+5] == '<div ':
-                        div_count += 1
-                    elif temp_content[i:i+6] == '</div>':
-                        div_count -= 1
-                        if div_count == 0:
-                            end_idx = start_idx + i + 6
-                            break
-                
-                if end_idx != -1:
-                    # Replace only the citation div content safely
-                    new_chart_div = f'<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit" role="region" aria-labelledby="gsc_prf_t-cit">{data["chart"]}'
-                    content = content[:start_idx] + new_chart_div + content[end_idx:]
+            # Use a more robust pattern - the chart div ends with </div></div></div> followed by whitespace and </td>
+            chart_pattern = r'(<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit"[^>]*>).*?(</div></div></div>)(\s*</td>)'
+            
+            # Check if the pattern exists in the content
+            if re.search(chart_pattern, content, re.DOTALL):
+                # Replace the entire chart div with fresh data
+                replacement = f'\\g<1>{data["chart"]}\\g<2>\\g<3>'
+                content = re.sub(chart_pattern, replacement, content, flags=re.DOTALL)
+                print("✅ Citation chart successfully updated with latest data")
+            else:
+                # Fallback: use simpler pattern without the closing tag constraint
+                fallback_pattern = r'(<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit"[^>]*>).*?(?=\s*</td>)'
+                if re.search(fallback_pattern, content, re.DOTALL):
+                    replacement = f'\\g<1>{data["chart"]}'
+                    content = re.sub(fallback_pattern, replacement, content, flags=re.DOTALL)  
+                    print("✅ Citation chart updated using fallback pattern")
                 else:
-                    print("⚠️  Could not find chart end, using fallback pattern")
-                    # Fallback to original pattern but safer
-                    chart_pattern = r'(<div class="gsc_rsb_s gsc_prf_pnl" id="gsc_rsb_cit"[^>]*>)(.*?)(</div></div></div></div>)'
-                    replacement = f"\\g<1>{data['chart']}"
-                    content = re.sub(chart_pattern, replacement, content, flags=re.DOTALL)
+                    print("❌ Failed to locate chart div for replacement")
+        else:
+            print("⚠️  No chart data available to update")
         
         # Write updated content
         with open(index_file, 'w', encoding='utf-8') as f:
