@@ -66,10 +66,10 @@ def fetch_citation_data_from_url(user_id, lang='en', domain='scholar.google.com'
             else:
                 content = raw_data.decode('utf-8')
             
-        # Extract metrics using regex
-        citations_match = re.search(r'Citations</a></td><td class="gsc_rsb_std">(\d+)</td>', content, re.IGNORECASE)
-        hindex_match = re.search(r'h-index</a></td><td class="gsc_rsb_std">(\d+)</td>', content, re.IGNORECASE)
-        i10index_match = re.search(r'i10-index</a></td><td class="gsc_rsb_std">(\d+)</td>', content, re.IGNORECASE)
+        # Extract metrics using more flexible regex patterns
+        citations_match = re.search(r'Citations</a></td><td[^>]*>(\d+)', content, re.IGNORECASE)
+        hindex_match = re.search(r'h-index</a></td><td[^>]*>(\d+)', content, re.IGNORECASE)
+        i10index_match = re.search(r'i10-index</a></td><td[^>]*>(\d+)', content, re.IGNORECASE)
         
         # Extract chart data
         chart_match = re.search(
