@@ -17,6 +17,12 @@ from datetime import datetime
 # Your Google Scholar user ID
 SCHOLAR_ID = 'hMTQZDQAAAAJ'
 
+# Minimum expected values - these should never decrease
+# NOTE: Update these values when your citations grow significantly to maintain protection
+MIN_CITATIONS = 486
+MIN_HINDEX = 10  
+MIN_I10INDEX = 10
+
 def fetch_citation_data_from_url(user_id, lang='en', domain='scholar.google.com'):
     """Fetch citation data from Google Scholar profile"""
     url = f'https://{domain}/citations?user={user_id}&hl={lang}'
@@ -125,6 +131,36 @@ def fetch_citation_data_from_url(user_id, lang='en', domain='scholar.google.com'
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
         return None
+
+def validate_citation_data(data):
+    """Validate that citation numbers are not lower than expected minimums"""
+    citations = int(data['citations'])
+    hindex = int(data['hindex'])
+    i10index = int(data['i10index'])
+    
+    issues = []
+    
+    if citations < MIN_CITATIONS:
+        issues.append(f"Citations: {citations} < {MIN_CITATIONS} (minimum)")
+    if hindex < MIN_HINDEX:
+        issues.append(f"H-index: {hindex} < {MIN_HINDEX} (minimum)")
+    if i10index < MIN_I10INDEX:
+        issues.append(f"I10-index: {i10index} < {MIN_I10INDEX} (minimum)")
+    
+    if issues:
+        print("🚨 VALIDATION FAILED - Citation numbers are unexpectedly low:")
+        for issue in issues:
+            print(f"   ❌ {issue}")
+        print("\n💡 Possible causes:")
+        print("   • Google Scholar is experiencing issues")
+        print("   • The HTML structure changed and extraction failed")
+        print("   • Network issues during data fetching")
+        print("   • Temporary access restrictions")
+        print("\n🔒 Skipping update to prevent incorrect data")
+        return False
+    
+    print("✅ Citation data validation passed")
+    return True
 
 def update_index_html(data):
     """Update index.html with new citation data"""
@@ -244,11 +280,16 @@ def main():
         print("📥 Data fetched successfully!")
         print(f"🔗 Source: {data['url']}")
         
-        if update_index_html(data):
-            print("\n🎉 Citation data updated successfully!")
+        # Validate the data before updating
+        if validate_citation_data(data):
+            if update_index_html(data):
+                print("\n🎉 Citation data updated successfully!")
+            else:
+                print("\n❌ Failed to update index.html")
+                print("🔒 File was not modified to ensure data integrity")
         else:
-            print("\n❌ Failed to update index.html")
-            print("🔒 File was not modified to ensure data integrity")
+            print("\n❌ Citation data validation failed")
+            print("🔒 Skipping update to prevent incorrect values")
     else:
         print("❌ Failed to fetch citation data from all domains")
         print("\n💡 Possible solutions:")
