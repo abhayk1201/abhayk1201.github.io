@@ -20,20 +20,25 @@ from urllib.parse import urlencode
 try:
     from scholarly import scholarly
     SCHOLARLY_AVAILABLE = True
-    print("✅ Scholarly library available - using hybrid approach")
 except ImportError:
-    print("📦 Scholarly library not found, installing...")
     try:
         import subprocess
         import sys
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "scholarly"])
+        import os
+        
+        # Install scholarly silently with timeout and optimizations
+        with open(os.devnull, 'w') as devnull:
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "scholarly", "--quiet", "--no-cache-dir", "--timeout", "60"],
+                stdout=devnull,
+                stderr=devnull,
+                timeout=300  # 5 minutes total timeout
+            )
         from scholarly import scholarly
         SCHOLARLY_AVAILABLE = True
-        print("✅ Scholarly library installed and imported successfully!")
-    except Exception as e:
+        
+    except Exception:
         SCHOLARLY_AVAILABLE = False
-        print(f"⚠️  Failed to install scholarly: {e}")
-        print("💡 Will use manual scraping only")
 
 # Your Google Scholar user ID
 SCHOLAR_ID = 'hMTQZDQAAAAJ'
